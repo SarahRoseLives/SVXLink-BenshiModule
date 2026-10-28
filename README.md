@@ -1,7 +1,5 @@
 # svxlink-benshi
 
-[![build](https://github.com/SarahRoseLives/SVXLink-BenshiModule/actions/workflows/build.yml/badge.svg)](https://github.com/SarahRoseLives/SVXLink-BenshiModule/actions/workflows/build.yml)
-
 Use a Benshi-compatible Bluetooth radio (Vero VR-N76, VR-N7600, and similar)
 as the transceiver for [SvxLink](https://github.com/sm0svx/svxlink).
 
