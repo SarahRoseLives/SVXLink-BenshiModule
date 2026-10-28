@@ -1,8 +1,9 @@
 name: build
 
+# GitHub Actions is currently unavailable on this account (billing lock).
+# Run this workflow manually from the Actions tab after resolving billing.
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
