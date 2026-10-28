@@ -7,28 +7,13 @@ machine. The example layout is:
 | --- | --- |
 | Bridge binary | `/usr/bin/svxlink-benshi` |
 | Bridge config | `/etc/svxlink-benshi.conf` |
-| Bridge service | `/usr/lib/systemd/system/svxlink-benshi.service` |
 | SvxLink binary | `/usr/bin/svxlink` |
 | SvxLink config | `/etc/svxlink/svxlink.conf` |
 | SvxLink sounds | `/usr/share/svxlink/sounds/en_US` |
 
 If you use `/usr/local` instead, adjust the paths accordingly.
 
-## 1. Create the SvxLink user
-
-Both services can run as an unprivileged `svxlink` user:
-
-```sh
-sudo groupadd --system svxlink 2>/dev/null || true
-sudo useradd --system --no-create-home --shell /usr/bin/nologin \
-  --gid svxlink svxlink 2>/dev/null || true
-```
-
-RFCOMM access normally does not require any extra group. If your distribution
-restricts Bluetooth sockets to a `bluetooth` group, add
-`SupplementaryGroups=bluetooth` to the bridge unit.
-
-## 2. Install bridge build dependencies
+## 1. Install bridge build dependencies
 
 | Distribution | Packages |
 | --- | --- |
@@ -36,7 +21,7 @@ restricts Bluetooth sockets to a `bluetooth` group, add
 | Debian/Ubuntu | `sudo apt install cmake g++ pkg-config libbluetooth-dev libssl-dev` |
 | Fedora | `sudo dnf install cmake gcc-c++ pkgconf bluez-libs-devel openssl-devel` |
 
-## 3. Build and install the bridge
+## 2. Build and install the bridge
 
 From this repository:
 
@@ -49,11 +34,14 @@ ctest --test-dir build --output-on-failure
 sudo cmake --install build
 ```
 
-This installs the binary, `/etc/svxlink-benshi.conf`, the systemd unit, and
-documentation. The bundled SBC codec is built from `third_party/sbc`; no system
-SBC package is needed.
+This installs the binary, `/etc/svxlink-benshi.conf`, and documentation. The
+bundled SBC codec is built from `third_party/sbc`; no system SBC package is
+needed.
 
-## 4. Pair the radio
+You can run the bridge as your normal user; root is only needed for the
+installation.
+
+## 3. Pair the radio
 
 The radio exposes two Bluetooth Classic RFCOMM services:
 
@@ -95,7 +83,7 @@ bluetoothctl info AA:BB:CC:DD:EE:FF
 
 You want `Paired: yes`, `Bonded: yes`, `Trusted: yes`, and `Connected: yes`.
 
-Test the radio connection before starting the services:
+Test the radio connection before starting SvxLink:
 
 ```sh
 svxlink-benshi --config /etc/svxlink-benshi.conf --probe
@@ -124,7 +112,7 @@ bluetoothctl trust AA:BB:CC:DD:EE:FF
 bluetoothctl connect AA:BB:CC:DD:EE:FF
 ```
 
-## 5. Configure the bridge
+## 4. Configure the bridge
 
 Edit `/etc/svxlink-benshi.conf`:
 
@@ -151,21 +139,20 @@ Notes:
   unset to keep the current channel.
 - `FREQUENCY` optionally tunes the VFO in MHz, for example `145.100`.
 - `SAMPLE_RATE` must match SvxLink's compile-time `INTERNAL_SAMPLE_RATE`
-  (see step 6).
+  (see step 5 and the Sample rate section).
 - NetTrx is unencrypted. If `BIND` is not loopback, set a long random
   `AUTH_KEY` and use the same key in both SvxLink transceiver sections.
 
-The bridge is now installable as a service:
+Run the bridge in a terminal:
 
 ```sh
-sudo systemctl daemon-reload
-sudo systemctl enable --now svxlink-benshi
-journalctl -u svxlink-benshi -f
+svxlink-benshi --config /etc/svxlink-benshi.conf
 ```
 
 You should see `Radio link established` and `SVXLink NetTrx server listening`.
+Leave it running while you configure and start SvxLink.
 
-## 6. Install SvxLink
+## 5. Install SvxLink
 
 ### Option A: distribution package
 
@@ -278,32 +265,22 @@ Set `CALLSIGN` to your call sign. Both `Rx` and `Tx` must use the same
 `HOST`/`TCP_PORT` so SvxLink shares one NetTrx connection. `CODEC=S16` is the
 efficient choice; `RAW` also works.
 
-### Install a SvxLink service
+## 6. Start and test
 
-If your SvxLink package already provides a systemd unit, use it. Otherwise
-copy the included example:
-
-```sh
-sudo cp systemd/svxlink.service.example /etc/systemd/system/svxlink.service
-sudo systemctl daemon-reload
-```
-
-Adjust `ExecStart` paths in the unit if your SvxLink is not installed under
-`/usr`.
-
-## 7. Start and test
+Run the bridge in one terminal:
 
 ```sh
-sudo systemctl enable --now svxlink-benshi svxlink
-systemctl status svxlink-benshi svxlink
+svxlink-benshi --config /etc/svxlink-benshi.conf
 ```
 
-Check the logs:
+Run SvxLink in another terminal:
 
 ```sh
-journalctl -u svxlink-benshi -f
-journalctl -u svxlink -f
+svxlink --config=/etc/svxlink/svxlink.conf
 ```
+
+No systemd service is installed by this project. If you want the programs to
+start at boot, use your distribution's service manager or your own unit files.
 
 You should see:
 
@@ -344,8 +321,9 @@ git pull
 cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc
 cmake --build build -j
 sudo cmake --install build
-sudo systemctl restart svxlink-benshi
 ```
+
+Stop and restart any manually running `svxlink-benshi`/`svxlink` processes.
 
 `cmake --install` reinstalls the example `/etc/svxlink-benshi.conf`. Keep a
 backup or re-apply your MAC and settings after upgrading.
@@ -353,21 +331,19 @@ backup or re-apply your MAC and settings after upgrading.
 ## Uninstall
 
 ```sh
-sudo systemctl disable --now svxlink-benshi
 sudo rm -f /usr/bin/svxlink-benshi
 sudo rm -f /etc/svxlink-benshi.conf
-sudo rm -f /usr/lib/systemd/system/svxlink-benshi.service
-sudo systemctl daemon-reload
 ```
 
-This does not remove SvxLink or the Bluetooth pairing.
+This does not remove SvxLink, the Bluetooth pairing, or any process you
+started manually.
 
 ## Troubleshooting checklist
 
 1. `bluetoothctl info <MAC>` shows `Paired`, `Bonded`, `Trusted`, `Connected`.
 2. `svxlink-benshi --probe` succeeds and prints radio status.
-3. `journalctl -u svxlink-benshi` shows `Radio link established`.
-4. `journalctl -u svxlink` shows `RemoteTrx protocol version 2.8` and both
+3. The bridge terminal shows `Radio link established`.
+4. The SvxLink terminal shows `RemoteTrx protocol version 2.8` and both
    `Connected to remote receiver/transmitter`.
 5. DTMF `0#` produces the Help prompt.
 6. If module audio is missing, install the sound pack.

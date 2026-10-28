@@ -91,8 +91,10 @@ sudo editor /etc/svxlink-benshi.conf
 #   MAC=AA:BB:CC:DD:EE:FF
 #   SAMPLE_RATE=16000
 
-# 4. Install/configure SvxLink, then start both services
-sudo systemctl enable --now svxlink-benshi svxlink
+# 4. Install/configure SvxLink, then run the bridge and SvxLink
+svxlink-benshi --config /etc/svxlink-benshi.conf
+# in another terminal:
+svxlink --config=/etc/svxlink/svxlink.conf
 ```
 
 Full details, including how to build SvxLink and install the sound pack, are in
@@ -152,7 +154,7 @@ tunnel for remote links.
 
 ## Testing the node
 
-Once both services are running, key the radio and use DTMF:
+Once the bridge and SvxLink are running, key the radio and use DTMF:
 
 | DTMF | Action |
 | --- | --- |
@@ -182,11 +184,12 @@ svxlink-benshi --unkey
 svxlink-benshi --test-tx
 ```
 
-Useful logs:
+Both programs log to the terminal. To keep logs while running in the
+background:
 
 ```sh
-journalctl -u svxlink-benshi -f
-journalctl -u svxlink -f
+svxlink-benshi --config /etc/svxlink-benshi.conf 2>&1 | tee benshi.log
+svxlink --config=/etc/svxlink/svxlink.conf 2>&1 | tee svxlink.log
 ```
 
 ## How audio is handled

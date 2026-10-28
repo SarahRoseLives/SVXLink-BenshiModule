@@ -8,4 +8,4 @@
 - SvxLink NetTrx protocol 2.8 server with `S16` and `RAW` audio codecs.
 - 8/16/32 kHz link audio, squelch/VOX, DTMF decoding and muting.
 - Optional HMAC-SHA1 authentication.
-- Diagnostic commands and systemd unit.
+- Diagnostic commands.

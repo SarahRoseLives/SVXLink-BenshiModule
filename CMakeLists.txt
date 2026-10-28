@@ -74,16 +74,8 @@ install(TARGETS svxlink-benshi
 install(FILES config/svxlink-benshi.conf
   DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}
 )
-configure_file(
-  systemd/svxlink-benshi.service.in
-  ${CMAKE_CURRENT_BINARY_DIR}/svxlink-benshi.service
-  @ONLY
-)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/svxlink-benshi.service
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/systemd/system
-)
 install(FILES README.md INSTALL.md CHANGELOG.md LICENSE
-  config/svxlink.conf.example systemd/svxlink.service.example
+  config/svxlink.conf.example
   DESTINATION ${CMAKE_INSTALL_DOCDIR}
 )
 
