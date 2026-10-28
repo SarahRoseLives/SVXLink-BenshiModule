@@ -1,0 +1,6 @@
+AGENTS.md
+build/
+dist/
+target/
+out/
+node_modules/

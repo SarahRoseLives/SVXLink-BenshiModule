@@ -1,0 +1,41 @@
+# Minimal SvxLink configuration snippet for svxlink-benshi.
+#
+# Copy or merge these sections into /etc/svxlink/svxlink.conf. The important
+# part is that the SimplexLogic uses the Net receiver and Net transmitter that
+# connect to svxlink-benshi. Everything else is normal SvxLink configuration.
+
+[GLOBAL]
+LOGICS=SimplexLogic
+CFG_DIR=svxlink.d
+TIMESTAMP_FORMAT="%c"
+
+[SimplexLogic]
+TYPE=Simplex
+RX=RxBenshi
+TX=TxBenshi
+MODULES=ModuleHelp,ModuleParrot
+CALLSIGN=MYCALL
+SHORT_IDENT_INTERVAL=60
+LONG_IDENT_INTERVAL=60
+DEFAULT_LANG=en_US
+RGR_SOUND_DELAY=0
+FX_GAIN_NORMAL=0
+FX_GAIN_LOW=-12
+
+# The bridge speaks the same protocol as SvxLink's remotetrx server.
+[RxBenshi]
+TYPE=Net
+HOST=127.0.0.1
+TCP_PORT=5210
+# S16 is the efficient native format; RAW (float32) also works.
+CODEC=S16
+# Must match SVXLINK/AUTH_KEY in svxlink-benshi.conf. Leave both empty for
+# loopback-only operation.
+AUTH_KEY=
+
+[TxBenshi]
+TYPE=Net
+HOST=127.0.0.1
+TCP_PORT=5210
+CODEC=S16
+AUTH_KEY=
